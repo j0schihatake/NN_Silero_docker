@@ -67,12 +67,6 @@ RUN pip3 install starlette
 # Устанавливаем модуль для озвучивания текста:
 RUN python3 -m pip install silero
 
-# Воспроизведение из контейнера:
-#RUN python3 -m pip install sounddevice
-
-# Сервер Flask:
-#RUN python3 -m pip install flask
-
 # FastApi
 RUN python3 -m pip install pydantic uvicorn[standard] fastapi
 
@@ -92,7 +86,6 @@ RUN mkdir /home/silero-user/silero/model
 RUN cd /home/silero-user/silero
 
 # Тут переместить app.py в корень (для fastapi, все переезжает в папку до src)
-#ADD src/app.py /home/silero-user/silero/src
 ADD src/fast.py /home/silero-user/silero/src
 ADD src/tts.py /home/silero-user/silero/
 
@@ -104,10 +97,6 @@ WORKDIR ${HOME}
 USER silero-user
 
 CMD uvicorn src.fast:app --host 0.0.0.0 --port 8083 --reload
-
-#CMD python -m silero_api_server
-#CMD python3 -m flask run --host=0.0.0.0
-#CMD python3 __main__.py
 
 # Docker:
 # docker build -t silero .
