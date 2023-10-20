@@ -21,6 +21,7 @@ import timeit
 import torch
 import sys
 import wave
+from pydantic import BaseModel
 from datetime import datetime, timedelta
 from num2t4ru import num2text
 from omegaconf import OmegaConf
@@ -51,6 +52,47 @@ wave_file_size_limit: int = 512 * 1024 * 1024  # 512 MiB - not more than 4GiB!
 wave_channels: int = 1  # Mono
 wave_header_size: int = 44  # Bytes
 wave_sample_width: int = int(16 / 8)  # 16 bits == 2 bytes
+
+
+class TranscribeRequest(BaseModel):
+    audio: bytes
+
+
+class TTSRequest(BaseModel):
+    text: list
+    speaker: str
+
+
+def silero_tts(request: TTSRequest):
+    print("sileroTTS")
+
+    # Set task param:
+    speaker = request.speaker
+    origin_lines = [request.text]
+
+    input_filename = process_args()
+    # origin_lines = load_file(input_filename)
+    line_length_limit: int = line_length_limits[speaker]  # Max text length for speaker
+    # del origin_lines
+    preprocessed_lines, preprocessed_text_len = preprocess_text(origin_lines, line_length_limit)
+    write_lines(input_filename + '_preprocessed.txt', preprocessed_lines)
+    # exit(0)
+    download_models_config()
+    print_models_information()
+    # find_max_line_length_all(input_filename, origin_lines)
+    # exit(0)
+    tts_model: torch.nn.Module = init_model(torch_device, torch_num_threads)
+    print(f'Available speakers: {tts_model.speakers}')
+    process_tts(tts_model, preprocessed_lines, input_filename, wave_file_size_limit, preprocessed_text_len)
+    result_response = TranscribeRequest()
+    result_response.audio = path_to_bytes(input_filename)
+    return result_response
+
+
+def path_to_bytes(filename):
+    with open(filename, 'rb') as fd:
+        contents = fd.read()
+    return contents
 
 
 def main():
@@ -168,7 +210,7 @@ def preprocess_text(lines: list, length_limit: int) -> (list, int):
         # Replace chars not supported by model
         line = line.replace("…", "...")  # Model does not handle "…"
         line = line.replace("*", " звёздочка ")
-        line = re.sub(r'(\d+)[\.|,](\d+)', r'\1 и \2', line) # to make more clear stuff like 2.75%
+        line = re.sub(r'(\d+)[\.|,](\d+)', r'\1 и \2', line)  # to make more clear stuff like 2.75%
         line = line.replace("%", " процентов ")
         line = line.replace(" г.", " году")
         line = line.replace(" гг.", " годах")
@@ -238,7 +280,7 @@ def init_model(device: str, threads_count: int) -> torch.nn.Module:
     t0 = timeit.default_timer()
 
     # https://github.com/snakers4/silero-models/issues/183
-    torch._C._jit_set_profiling_mode(False) # Fixes initial delay
+    torch._C._jit_set_profiling_mode(False)  # Fixes initial delay
 
     if not torch.cuda.is_available() and device == "auto":
         device = 'cpu'
@@ -362,7 +404,8 @@ def process_tts(tts_model: torch.nn.Module, lines: list, output_filename: str, w
     audio_size: int = wave_header_size
     wave_file_number: int = 0
     next_chunk_size: int
-    wf = init_wave_file(F'{output_filename}_{speaker}_{wave_file_number}.wav', wave_channels, wave_sample_width, sample_rate)
+    wf = init_wave_file(F'{output_filename}_{speaker}_{wave_file_number}.wav', wave_channels, wave_sample_width,
+                        sample_rate)
     for line in lines:
         if line == '\n' or line == '':
             continue

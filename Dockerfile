@@ -57,6 +57,13 @@ RUN useradd -rm -d /home/silero-user -s /bin/bash -G users,sudo,silero-group -u 
 
 RUN python3 -m pip install torch torchvision torchaudio
 
+# Необходимые зависимости:
+RUN pip3 install git+https://github.com/Yuego/num2t4ru
+RUN pip3 install gradio
+RUN pip3 install omegaconf
+RUN pip3 install argparse
+RUN pip3 install starlette
+
 # Устанавливаем модуль для озвучивания текста:
 RUN python3 -m pip install silero
 
@@ -76,6 +83,8 @@ RUN echo 'silero-user:admin' | chpasswd
 
 RUN mkdir /home/silero-user/silero
 
+RUN mkdir /home/silero-user/silero/output
+
 RUN mkdir /home/silero-user/silero/src
 
 RUN mkdir /home/silero-user/silero/model
@@ -88,6 +97,7 @@ ADD src/fast.py /home/silero-user/silero/src
 ADD src/tts.py /home/silero-user/silero/
 
 # Preparing for login
+RUN chmod 777 /home/silero-user/silero/output
 RUN chmod 777 /home/silero-user/silero
 ENV HOME /home/silero-user/silero/
 WORKDIR ${HOME}
@@ -101,7 +111,7 @@ CMD uvicorn src.fast:app --host 0.0.0.0 --port 8083 --reload
 
 # Docker:
 # docker build -t silero .
-# docker run -it -dit --name sai -p 8083:8083  --gpus all --restart unless-stopped silero:latest
+# docker run -it -dit --name silero -p 8083:8083  --gpus all --restart unless-stopped silero:latest
 
 # Debug:
-# docker container attach sai
+# docker container attach silero

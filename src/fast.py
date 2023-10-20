@@ -1,6 +1,6 @@
-from fastapi import FastAPI, File, UploadFile, Response
+from fastapi import FastAPI, Response
 from pydantic import BaseModel
-from tts import speak
+from tts import silero_tts
 
 app = FastAPI()
 
@@ -13,12 +13,12 @@ class TTSRequest(BaseModel):
     text: str
     speaker: str
 
+
 @app.get("/")
 async def hello():
-    return {"hello": "from SAI"}
+    return {"hello": "from silero"}
 
 
 @app.post("/tts")
 async def tts(request: TTSRequest):
-    audio = speak(request.text, request.speaker)
-    return Response(audio, media_type="audio/mpeg")
+    return silero_tts(request)
