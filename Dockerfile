@@ -97,7 +97,7 @@ CMD uvicorn src.fast:app --host 0.0.0.0 --port 8083 --reload
 
 # Docker:
 # docker build -t silero .
-# docker run -it -dit --name silero -p 8083:8083  --gpus all --restart unless-stopped silero:latest
+# docker run -it -dit --name silero -p 8083:8083 -v D:/Develop/NeuronNetwork/Silero/NN_Silero_docker/temp/:/home/silero-user/silero/output/  --gpus all --restart unless-stopped silero:latest
 
 # Debug:
 # docker container attach silero
