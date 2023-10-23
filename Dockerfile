@@ -26,7 +26,6 @@ RUN apt-get update \
         pip \
         bash \
         ncdu \
-        ffmpeg \
         net-tools \
         openssh-server \
         libglib2.0-0 \
