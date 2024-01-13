@@ -12,6 +12,7 @@ class TranscribeRequest(BaseModel):
 class TTSRequest(BaseModel):
     text: str
     speaker: str
+    file: str
 
 
 @app.get("/")

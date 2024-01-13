@@ -66,6 +66,7 @@ class TranscribeRequest():
 class TTSRequest(BaseModel):
     text: list
     speaker: str
+    file: str
 
 
 def remove_file(path: str) -> None:
