@@ -2,7 +2,7 @@
 
 # docker pull continuumio/miniconda3:latest
 
-ARG TAG=latest
+ARG TAG=24.1.2-0
 FROM continuumio/miniconda3:$TAG
 
 RUN apt-get update \
