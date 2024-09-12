@@ -100,6 +100,10 @@ CMD uvicorn src.fast:app --host 0.0.0.0 --port 8083 --reload
 # docker run -it -dit --name silero -p 8083:8083 -v D:/Develop/NeuronNetwork/Silero/NN_Silero_docker/temp/:/home/silero-user/silero/output/  --gpus all --restart unless-stopped silero:latest
 # docker run -it -dit --name silero -p 8083:8083 -v D:/Develop/NeuronNetwork/Silero/NN_Silero_docker/temp/:/home/silero-user/silero/output/ --restart unless-stopped silero:latest
 
+# docker ps
+# docker export 0c6126cb562fd4b58837b0ece4defbb0a16f671e784a2fd407759a6ffcdfffaa -o D:/silero.tar
+# docker import D:/silero.tar silero
+
 # Запуск на сервере:
 # docker run -it -dit --network=sai-network --name silero -p 8083:8083 -v /root/work/silero_docker/NN_Silero_docker/:/home/silero-user/silero/output/ --restart unless-stopped silero:latest
 
