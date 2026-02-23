@@ -2,6 +2,9 @@
 
 # docker pull continuumio/miniconda3:latest
 
+# Dockerfile to deploy a llama-cpp container with conda-ready environments
+
+# docker pull continuumio/miniconda3:latest
 ARG TAG=24.1.2-0
 FROM continuumio/miniconda3:$TAG
 
@@ -72,26 +75,35 @@ RUN python3 -m pip install torch torchvision torchaudio
 # Update user password:
 RUN echo 'silero-user:admin' | chpasswd
 
-RUN mkdir /home/silero-user/silero
-
-RUN mkdir /home/silero-user/silero/output
-
-RUN mkdir /home/silero-user/silero/src
-
-RUN mkdir /home/silero-user/silero/model
-
-RUN cd /home/silero-user/silero
+# Создаем директории
+RUN mkdir -p /home/silero-user/silero/output
+RUN mkdir -p /home/silero-user/silero/src
+RUN mkdir -p /home/silero-user/silero/model
+RUN mkdir -p /home/silero-user/.cache/torch/hub
+RUN mkdir -p /home/silero-user/silero/config
 
 # Тут переместить app.py в корень (для fastapi, все переезжает в папку до src)
-ADD src/fast.py /home/silero-user/silero/src
+ADD src/fast.py /home/silero-user/silero/src/
 ADD src/tts.py /home/silero-user/silero/
 
+# Копируем скрипт для предварительной загрузки моделей
+ADD scripts/preload_models.py /home/silero-user/silero/scripts/
+
 # Preparing for login
-RUN chmod 777 /home/silero-user/silero/output
-RUN chmod 777 /home/silero-user/silero
+RUN chmod -R 777 /home/silero-user/silero/output
+RUN chmod -R 777 /home/silero-user/silero
+RUN chmod -R 777 /home/silero-user/.cache
+
 ENV HOME /home/silero-user/silero/
 WORKDIR ${HOME}
 USER silero-user
+
+# Предварительно загружаем модели при сборке
+RUN python3 scripts/preload_models.py
+
+# Устанавливаем переменные окружения для кэша
+ENV TORCH_HOME=/home/silero-user/.cache/torch
+ENV XDG_CACHE_HOME=/home/silero-user/.cache
 
 CMD uvicorn src.fast:app --host 0.0.0.0 --port 8083 --reload
 
@@ -109,3 +121,9 @@ CMD uvicorn src.fast:app --host 0.0.0.0 --port 8083 --reload
 
 # Debug:
 # docker container attach silero
+
+# GPU
+# docker run -it -dit --name silero -p 8083:8083 -v D:/Develop/NeuronNetwork/Silero/NN_Silero_docker/temp/:/home/silero-user/silero/output/ -v silero-models:/home/silero-user/.cache/torch/hub --gpus all --restart unless-stopped silero:latest
+
+# CPU
+# docker run -it -dit --name silero -p 8083:8083 -v D:/Develop/NeuronNetwork/Silero/NN_Silero_docker/temp/:/home/silero-user/silero/output/ -v silero-models:/home/silero-user/.cache/torch/hub --restart unless-stopped silero:latest
